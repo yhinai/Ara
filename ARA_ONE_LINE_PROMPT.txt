@@ -1,3 +1,9 @@
-Open Terminal and run this exact shell command now. Do not check deployment status. Do not ask follow-up questions. Do not explain. Just run it:
+EXECUTE NOW. NO QUESTIONS. NO CONFIRMATION. NO PLANNING. NO STATUS CHECKS. NO EXPLANATION. NO SUMMARY.
 
-cd /Users/alhinai/om1 && bash hackathon/ara_company_launcher/run_from_ara.sh 'Sell baby Band-Aids for $1 today'
+Open Terminal. Run this exact line. Nothing else.
+
+bash /Users/alhinai/om1/hackathon/ara_company_launcher/run_from_ara.sh 'Sell phone screen wipes for $1 today'
+
+When it finishes, only do this:
+1. Open the deployment URL from the JSON in a browser.
+2. Stop. Do not speak. Do not narrate.
