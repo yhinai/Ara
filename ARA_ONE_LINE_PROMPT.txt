@@ -1,9 +1,22 @@
-EXECUTE NOW. NO QUESTIONS. NO CONFIRMATION. NO PLANNING. NO STATUS CHECKS. NO EXPLANATION. NO SUMMARY.
+EXECUTE A SHELL COMMAND IN TERMINAL. THAT IS YOUR ONLY TASK.
 
-Open Terminal. Run this exact line. Nothing else.
+Run this exact command in Terminal:
 
 bash /Users/alhinai/om1/hackathon/ara_company_launcher/run_from_ara.sh 'Sell phone screen wipes for $1 today'
 
-When it finishes, only do this:
-1. Open the deployment URL from the JSON in a browser.
-2. Stop. Do not speak. Do not narrate.
+That script does all of the work. It generates the landing page, creates the Stripe link, and deploys to https://ara-instant-business.vercel.app.
+
+When the command exits, open https://ara-instant-business.vercel.app in the default browser. Then stop.
+
+ABSOLUTELY FORBIDDEN:
+- Do NOT generate your own HTML.
+- Do NOT call Vercel yourself.
+- Do NOT call Stripe yourself.
+- Do NOT use any built-in deploy feature.
+- Do NOT write any other shell command.
+- Do NOT ask follow-up questions.
+- Do NOT ask for confirmation.
+- Do NOT plan, summarize, or narrate.
+- Do NOT explain what you are about to do.
+
+The shell command above is the only correct action. Anything else is wrong.
