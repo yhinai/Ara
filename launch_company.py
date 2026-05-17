@@ -29,17 +29,36 @@ def _slug(text: str) -> str:
     return slug[:54].strip("-") or "instant-company"
 
 
+_SPELLED_NUMBERS = {
+    "one": 1, "two": 2, "three": 3, "four": 4, "five": 5,
+    "six": 6, "seven": 7, "eight": 8, "nine": 9, "ten": 10,
+    "eleven": 11, "twelve": 12, "thirteen": 13, "fourteen": 14, "fifteen": 15,
+    "sixteen": 16, "seventeen": 17, "eighteen": 18, "nineteen": 19, "twenty": 20,
+    "twenty five": 25, "thirty": 30, "forty": 40, "fifty": 50, "hundred": 100,
+}
+
+
 def _amount_cents_from_idea(idea: str, fallback_cents: int) -> int:
+    # "$3" or "$3.50"
     match = re.search(r"\$(\d+(?:\.\d{1,2})?)", idea)
-    if not match:
-        return fallback_cents
-    return max(50, int(round(float(match.group(1)) * 100)))
+    if match:
+        return max(50, int(round(float(match.group(1)) * 100)))
+    # "3 dollars" / "3 bucks" / "3 usd"
+    match = re.search(r"(\d+(?:\.\d{1,2})?)\s*(?:dollars?|bucks?|usd)", idea, re.IGNORECASE)
+    if match:
+        return max(50, int(round(float(match.group(1)) * 100)))
+    # spelled-out: "ten dollars", "twenty bucks" (longest match first)
+    for word, n in sorted(_SPELLED_NUMBERS.items(), key=lambda x: -len(x[0])):
+        if re.search(rf"\b{re.escape(word)}\b\s*(?:dollars?|bucks?|usd)?", idea, re.IGNORECASE):
+            return n * 100
+    return fallback_cents
 
 
 def _product_from_idea(idea: str, city: str) -> str:
     product = re.sub(r"\s+", " ", idea.strip().rstrip("."))
     product = re.sub(r"^(sell|build|launch|make|start|create)\s+", "", product, flags=re.IGNORECASE)
-    product = re.sub(r"\$?\d+(?:\.\d{2})?", "", product)
+    # Remove price phrases more aggressively
+    product = re.sub(r"\$?\d+(?:\.\d{2})?\s*(?:dollars?|bucks?|usd)?", "", product, flags=re.IGNORECASE)
     if city.strip():
         product = re.sub(rf"\s+in\s+{re.escape(city.strip())}\b", "", product, flags=re.IGNORECASE)
     product = re.sub(r"\s+for\s+(?:today)?\b", "", product, flags=re.IGNORECASE)
@@ -203,7 +222,7 @@ def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="No-SDK Ara hackathon company launcher.")
     parser.add_argument("idea", help="One-sentence launch idea.")
     parser.add_argument("--city", default="", help="Optional launch city shown on the page.")
-    parser.add_argument("--amount-cents", type=int, default=100, help="Stripe amount in cents. Defaults to $1.")
+    parser.add_argument("--amount-cents", type=int, default=500, help="Stripe amount in cents. Defaults to $5.")
     parser.add_argument("--output-dir", help="Optional static site output directory.")
     return parser
 

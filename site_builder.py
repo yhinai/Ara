@@ -15,6 +15,20 @@ _TRAILING_STOPWORDS = {
     "and", "or", "but", "the", "a", "an",
 }
 
+_SPELLED_NUMBER_WORDS = (
+    "one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|"
+    "thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|"
+    "twenty|thirty|forty|fifty|hundred"
+)
+
+
+def _strip_price_phrases(text: str) -> str:
+    """Remove '$3', '3 dollars', 'ten bucks', '5 USD' so they don't leak into the brand."""
+    text = re.sub(r"\$\d+(?:\.\d{1,2})?", "", text)
+    text = re.sub(r"\b\d+(?:\.\d{1,2})?\s*(?:dollars?|bucks?|usd)\b", "", text, flags=re.IGNORECASE)
+    text = re.sub(rf"\b(?:{_SPELLED_NUMBER_WORDS})\b\s*(?:dollars?|bucks?|usd)?\b", "", text, flags=re.IGNORECASE)
+    return re.sub(r"\s+", " ", text).strip(" .,")
+
 _EMOJI_LOOKUP = [
     (("dog", "puppy", "cat", "pet", "bandana", "collar", "leash"), "🐾"),
     (("coffee", "espresso", "latte", "cappuccino", "brew", "cafe"), "☕"),
@@ -53,9 +67,9 @@ def _slug(text: str) -> str:
 
 
 def _title_from_idea(idea: str, city: str = "") -> str:
-    cleaned = re.sub(r"\s+", " ", idea.strip().rstrip("."))
+    cleaned = _strip_price_phrases(idea)
+    cleaned = re.sub(r"\s+", " ", cleaned.strip().rstrip("."))
     cleaned = re.sub(r"^(sell|build|launch|make|start|create)\s+", "", cleaned, flags=re.IGNORECASE)
-    cleaned = re.sub(r"\$?\d+(?:\.\d{2})?", "", cleaned)
     if city.strip():
         cleaned = re.sub(rf"\s+in\s+{re.escape(city.strip())}\b", "", cleaned, flags=re.IGNORECASE)
     cleaned = re.sub(r"\s+for\s+(?:today)?\b", "", cleaned, flags=re.IGNORECASE)
@@ -83,9 +97,9 @@ def _hero_emoji(brand: str, idea: str) -> str:
 
 
 def _tagline(brand: str, idea: str) -> str:
-    cleaned = re.sub(r"\s+", " ", idea.strip().rstrip("."))
+    cleaned = _strip_price_phrases(idea)
+    cleaned = re.sub(r"\s+", " ", cleaned.strip().rstrip("."))
     cleaned = re.sub(r"^(sell|build|launch|make|start|create)\s+", "", cleaned, flags=re.IGNORECASE)
-    cleaned = re.sub(r"\$?\d+(?:\.\d{2})?", "", cleaned)
     cleaned = re.sub(r"\s+today\b", "", cleaned, flags=re.IGNORECASE).strip(" .,")
     words = cleaned.split()
     if 7 <= len(words) <= 12:
