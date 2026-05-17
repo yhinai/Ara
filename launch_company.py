@@ -169,10 +169,39 @@ def post_to_webhook(message: str) -> dict[str, Any]:
         return {"mode": "live", "status": response.status}
 
 
+def _spec_from_env() -> dict | None:
+    """Read a pre-extracted business spec from the LAUNCH_SPEC_JSON env var.
+
+    Ara (the menu-bar AI computer app) is expected to set this before invoking
+    the script. Format: a JSON object with any of these keys:
+      {brand, tagline, product, amount_cents, hero_emoji,
+       features: [{emoji, title, desc}, ...]}
+    Any missing key falls back to rule-based extraction. Returns None on
+    parse failure or empty/missing env var — no LLM API call is made.
+    """
+    raw = os.getenv("LAUNCH_SPEC_JSON", "").strip()
+    if not raw:
+        return None
+    try:
+        spec = json.loads(raw)
+    except (json.JSONDecodeError, ValueError):
+        return None
+    return spec if isinstance(spec, dict) and spec else None
+
+
 def launch_company(idea: str, city: str, amount_cents: int, output_dir: str | None = None) -> dict[str, Any]:
     """Run the complete no-SDK company launch flow."""
-    amount_cents = _amount_cents_from_idea(idea, amount_cents)
-    product = _product_from_idea(idea, city)
+    # Ara can pre-extract a business spec and pass it via LAUNCH_SPEC_JSON env var.
+    # No external LLM API is called from this script — extraction is either rule-based
+    # (regex) or done by Ara itself before invoking this script.
+    spec = _spec_from_env()
+
+    if spec:
+        amount_cents = spec.get("amount_cents", amount_cents)
+        product = spec.get("product") or _product_from_idea(idea, city)
+    else:
+        amount_cents = _amount_cents_from_idea(idea, amount_cents)
+        product = _product_from_idea(idea, city)
     payment = create_payment_link(product=product, amount_cents=amount_cents, currency="usd")
     payment_url = payment.get("url", "")
 
@@ -187,6 +216,7 @@ def launch_company(idea: str, city: str, amount_cents: int, output_dir: str | No
         amount_cents=amount_cents,
         payment_link_id=payment.get("id", ""),
         coordinator_url=os.getenv("COMPANY_LAUNCH_COORDINATOR_URL", DEFAULT_COORDINATOR_URL),
+        llm_spec=spec,
     )
     deployment = deploy_to_vercel(site["output_dir"])
     public_url = deployment.get("url") or ""

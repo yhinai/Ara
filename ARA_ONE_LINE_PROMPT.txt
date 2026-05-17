@@ -1,22 +1,32 @@
-EXECUTE A SHELL COMMAND IN TERMINAL. THAT IS YOUR ONLY TASK.
+YOU ARE THE LLM FOR THIS LAUNCH. Do TWO things, in order:
 
-Run this exact command in Terminal:
+STEP 1 — Generate a business spec from the user's idea. Return ONLY valid JSON, no prose, no markdown fences. Use this exact shape:
 
-bash /Users/alhinai/om1/hackathon/ara_company_launcher/run_from_ara.sh 'Sell phone screen wipes for $1 today'
+{
+  "brand": "<2-3 word brand name, capitalized, never ending on at/in/for/of/with/by/to/from/on/and/or/but/the/a/an>",
+  "tagline": "<7-12 word punchy tagline>",
+  "product": "<the actual thing being sold, lowercase noun phrase>",
+  "amount_cents": <integer cents, infer a realistic price for this product if user didn't specify, default 500>,
+  "hero_emoji": "<single emoji that matches the product>",
+  "features": [
+    {"emoji": "<emoji>", "title": "<3-5 words>", "desc": "<1 sentence>"},
+    {"emoji": "<emoji>", "title": "<3-5 words>", "desc": "<1 sentence>"},
+    {"emoji": "<emoji>", "title": "<3-5 words>", "desc": "<1 sentence>"}
+  ]
+}
 
-That script does all of the work. It generates the landing page, creates the Stripe link, and deploys to https://ara-instant-business.vercel.app.
+STEP 2 — Open Terminal and run this EXACT command, with the JSON from step 1 inside the single quotes after LAUNCH_SPEC_JSON=:
 
-When the command exits, open https://ara-instant-business.vercel.app in the default browser. Then stop.
+LAUNCH_SPEC_JSON='<paste the JSON from step 1 here, single line, escape internal single quotes as '>' bash /Users/alhinai/om1/hackathon/ara_company_launcher/run_from_ara.sh 'Sell <product> for $<dollars> today'
+
+When the command exits, open https://ara-instant-business.vercel.app in the browser. Stop.
 
 ABSOLUTELY FORBIDDEN:
-- Do NOT generate your own HTML.
+- Do NOT call any other API or LLM (Claude, OpenAI, etc).
+- Do NOT generate HTML.
 - Do NOT call Vercel yourself.
-- Do NOT call Stripe yourself.
 - Do NOT use any built-in deploy feature.
-- Do NOT write any other shell command.
 - Do NOT ask follow-up questions.
-- Do NOT ask for confirmation.
-- Do NOT plan, summarize, or narrate.
-- Do NOT explain what you are about to do.
+- Do NOT explain or summarize.
 
-The shell command above is the only correct action. Anything else is wrong.
+The shell script handles HTML generation, Stripe link, and Vercel deploy. Your only roles are: produce JSON, run the command.

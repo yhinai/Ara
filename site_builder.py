@@ -164,6 +164,29 @@ def _feature_cards(brand: str, idea: str) -> list[tuple[str, str, str]]:
     ]
 
 
+def _coerce_llm_features(value: Any) -> list[tuple[str, str, str]] | None:
+    """Convert llm_spec['features'] (list of dicts) into the (emoji,title,desc) tuple shape.
+
+    Returns None if the input is not usable so callers can fall back to rule-based cards.
+    """
+    if not isinstance(value, list) or not value:
+        return None
+    out: list[tuple[str, str, str]] = []
+    for item in value:
+        if not isinstance(item, dict):
+            continue
+        emoji = item.get("emoji")
+        title = item.get("title")
+        desc = item.get("desc")
+        if (
+            isinstance(emoji, str) and emoji.strip()
+            and isinstance(title, str) and title.strip()
+            and isinstance(desc, str) and desc.strip()
+        ):
+            out.append((emoji, title, desc))
+    return out or None
+
+
 def _render_index(
     idea: str,
     city: str,
@@ -171,12 +194,33 @@ def _render_index(
     amount_cents: int,
     payment_link_id: str = "",
     coordinator_url: str = "",
+    llm_spec: dict | None = None,
 ) -> tuple[str, dict[str, str]]:
     brand = _title_from_idea(idea, city)
+    if isinstance(llm_spec, dict):
+        candidate = llm_spec.get("brand")
+        if isinstance(candidate, str) and candidate.strip():
+            brand = candidate.strip()
+
     price = _price_label(amount_cents)
+
     hero_emoji = _hero_emoji(brand, idea)
+    if isinstance(llm_spec, dict):
+        candidate = llm_spec.get("hero_emoji")
+        if isinstance(candidate, str) and candidate.strip():
+            hero_emoji = candidate.strip()
+
     tagline = _tagline(brand, idea)
+    if isinstance(llm_spec, dict):
+        candidate = llm_spec.get("tagline")
+        if isinstance(candidate, str) and candidate.strip():
+            tagline = candidate.strip()
+
     cards = _feature_cards(brand, idea)
+    if isinstance(llm_spec, dict):
+        llm_cards = _coerce_llm_features(llm_spec.get("features"))
+        if llm_cards:
+            cards = llm_cards
 
     headline = f"{brand} is live"
     if city.strip():
@@ -612,6 +656,7 @@ def build_landing_page(
     amount_cents: int = 100,
     payment_link_id: str = "",
     coordinator_url: str = "",
+    llm_spec: dict | None = None,
 ) -> dict[str, Any]:
     """Generate a static landing page and Vercel config using only the Python standard library."""
     target_dir = Path(output_dir).expanduser().resolve()
@@ -624,6 +669,7 @@ def build_landing_page(
         amount_cents=amount_cents,
         payment_link_id=payment_link_id,
         coordinator_url=coordinator_url,
+        llm_spec=llm_spec,
     )
     vercel_config = {
         "cleanUrls": True,
